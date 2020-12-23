@@ -1,94 +1,113 @@
-# Kiri:Moto todo
+# Kiri:Moto todo and notes
 
-* better small screen support (on screen button for hiding side panels, compact selectors)
-* widget general add-ons (fdm supports, cam tabs)
-* extend mesh object to store raw + annotations (rot,scale,pos)
-*    share raw data w/ dups, encode/decode
-* bail on decimation if it's proving ineffective
-* improve decimation speed by avoiding in/out of Point
-* server-side processing (determine protocol and storage)
-* move printing/output into module
-* refactor / simplify POLY.expand (put onus on collector)
-* cloned objects should share same slice data unless rotated
-* remember object's original position/orientation for reset/multi-object import alignment
+## 2.5 plan
+# `cnc`
+# - split gcode output
+# - redo path planning
+# - double-sided assistance
+# - more tracing types (in, out, clear, pocket)
+# - trace re-ordering
+# `fdm`
+# - bind process to z ranges or boxed regions
+# - non-planar actual
+# - layer start point control
+# `sla`
+# - common support area detection from new fdm code
 
-# FDM todo
+## `C` cosmetic, `F` functional, `P` performance, `B` bug fix
 
-* first layer segment large flat areas for better fill reliability
-* adaptive column to compensate for fine or layers that finish too quickly and melt
-* apply finish speed to exposed top and underside flat areas
-* store/recover grid:print target against printer selected in device
-* expand internal supporting flats
-* first layer support speed should be same as shell speed
-* use fill spacing for top raft fill spacing
-* add lay-flat auto-rotation or from selected face
-* refactor thin fill to use outline and inside poly normal dist to self
-* check for support / brim intersections on first layer
-* determine start point from gcode preamble
-* fix wrong first point in general (all modes)
-* trim support offset from layer below
-* feather sharp tips by reducing extrusion in area of overlap
-* dual extruder support
-* add manual supports
-* option to support interior bridges when 0% infill
-* fix multiple part layout export offset (resend position @ print time)
+* `B` normals possibly inverted on faces in 2D to 3D conversion
 
-# CAM todo
+* `P` duplicate objects should share same slice data unless rotated or scaled
+* `P` allow selection to me decimated on demand (context menu?)
+* `P` improve decimation speed by avoiding in/out of Point?
+* `P` client/worker interface normalization
 
-* refactor slicing around flats w/ interpolation instead of culling
-* optimize away topo generation (for z hop/move) when part is flat
-* add imperial / metric units switch in (future) global config options
-* add option to spiral in vs out (optimal tool life) vs mixed (optimal path)
-* pocket order should consider distance as well as size
-* ease-in and ease-out especially on tab cut-out start/stop
-* import options: unify bodies.
-* milling order option: by operation or by part
-* store tab and camshell polys in widget.topo to minimize z on edge moves
-* trimming linear finishing to tabs
-* improve 'clockwise' setting to take into account spindle direction, etc
-* linear finishing cutting out tabs
-* linear finishing going back to z top too often
-* fix ease down and re-enable
-* warn when part > stock or cuts go outside bed
-* option to skip milling holes that would be drilled
-* sender speed control slider (0%-200%) ?
-* add M03 tool feedrate support (https://forum.grid.space/index.php?p=/discussion/14/s-parameter#latest)
-* fails in pancaking (clone) when there are no sliced layers (like z bottom too high)
-* crossing open space check point is outside camshell before returning max z
-* compensate for leave-stock in outside roughing (w/ tabs)
-* fix zooming, workspace thickness for larger workspaces
-* only show toolchange alert/pause after the first M6
-* raise z by leave-stock in roughing? if so, see next
-* if (raise z) above, add clear-flats to finishing
-* revisit tabs - just cut polys instead
-* try chunking topo until smaller blocks for processing (fit in cacheline)
-* linear x/y scan overflow (y) w/ topo model
-* linear x/y not obeying inset from pocket only
-* check normals for downward facing facets. mark top for slice skirt/pancake
+# FDM
 
-# Laser todo
+* `B` fix adaptive slicing with multi-extruder
+* `B` fix supports with grouped parts
+* `B` multi-extruder rendering of raft fails to offset the rest of the print
+* `B` multi-extruder purge blocks fail to generate properly for rafts
 
-* overcuts, radii for drag knives
-* sla :: svg modified from http://garyhodgson.github.io/slic3rsvgviewer/?file=examples/belt_pulley3.svg
+* `F` redo auto supports to use poly faces rather than deltas
+* `F` control for size of purge block (with 0=disabled)
+* `F` control layer start position
+* `F` add separate fill speed control
+* `F` polishing and other non-planar work
+* `F` gradient infill https://www.youtube.com/watch?v=hq53gsYREHU&feature=emb_logo
+* `F` first layer segment large flat areas for better fill reliability
+* `F` feather sharp tips by reducing extrusion in area of overlap
+* `F` enable purge blocks when quick layers are detected
+* `F` option to support interior bridges when 0% infill
+* `F` trim support offset from layer below
+* `F` calculate filament use per extruder per print
+* `F` first layer support speed should be same as shell speed
+* `F` apply finish speed to exposed top and underside flat areas
+* `F` expand internal supporting flats / solids before projection
+* `F` continuous printing (z belt systems)
+
+* `P` implement infill clipping in wasm
+* `P` solid fill the tops of supports for down facing flats
+* `P` sparse infill should follow polys between intersect points
+
+# SLA
+
+* `P` prioritize supports by length of unsupported span. mandatory when circularity > X
+*     or % area of inner to outer poly is high (making it a thin shell)
+
+# CAM
+
+* `B` failure to go *up* when moving between parts?
+* `B` starting export during animation unleashes chaos
+* `B` climb vs conventional not fully consistent after refactor
+* `B` outside cutting direction in roughing mode inverted
+* `B` top clearing operations should use linear, not offset, passes
+* `B` on rotation, tabs dissociate from parts whose center changes with rotation
+* `B` strip "ops" from gcode comments
+
+* `F` split out facing. make it use linear passes
+* `F` add linear clearing strategy option for roughing / pocket
+* `F` option to use part / STL coordinate space to determine X,Y origin
+* `F` validate muti-part layout and spacing exceeds largest outside tool diameter
+* `F` skip "thru" holes checkbox for roughing and outlining
+* `F` polygon simplification option in tracing (for image derived maps)
+* `F` exports separate files for each operation
+* `F` switch z top offset to a z anchor (top/bottom) + offset
+* `F` A-B linked cutting profiles for double-sided milling / part flips
+* `F` parameterize dropping close points in prep.js. ensure long segments remain straight
+* `F` flat and volumetric rendering of paths
+* `F` z bounded slices (extension of z bottom offset feature)
+* `F` z planar settings visualizations
+* `F` convert acute angles to arcs
+* `F` extend acute roughing on inside polys to clear small voids
+* `F` lead-in milling
+* `F` adaptive clearing in roughing mode
+* `F` trapezoidal tabs (in the Z axis)
+* `F` ease-in and ease-out especially on tab cut-out start/stop
+* `F` implement z line-only follows for ball/taper
+* `F` add option to spiral in vs out (optimal tool life) vs mixed (optimal path)
+* `F` add support for tapered ball mills
+* `F` warn when part > stock or cuts go outside bed
+* `F` animation should clear the mesh in areas where the cuts go through the stock?
+* `F` support lathe mode / A-axis / rotary
+
+* `P` detect render message backlog and pause or warn
+* `P` redo all path route / planning in prepare to account for terrain before camOut
+* `P` allow faster z movements when contouring (not plunging)
+
+# Laser
+
+* `F` add PLT / HP-GL output format (https://en.wikipedia.org/wiki/HP-GL)
 
 # References
 
-* other
-  -----
+* https://www.canva.com/colors/color-wheel/
 * http://lcamtuf.coredump.cx/gcnc/full/
 * http://wiki.imal.org/howto/cnc-milling-introduction-cutting-tools
 * http://www.twak.co.uk/2011/01/degeneracy-in-weighted-straight.html
+* http://photon.chrisgraf.de/
 
+# More CNC
 
-# Sample FDM Pause/Unpause ```
-
-G91        ; Relative Positioning
-G0 Z20     ; Move Bed down 20mm
-G90        ; Absolute positioning
-G0 X10 Y10 ; Move to 10,10
-M2000      ; Raise3D N2 Pause command
-G91        ; Relative Positioning
-G0 Z-20    ; Move Bed up 20mm
-G90        ; Absolute positioning
-
-```
+* https://www.researchgate.net/publication/250328721_Toolpath_Optimization_on_Automatic_Removal_Uncut_and_Application
